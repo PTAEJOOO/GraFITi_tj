@@ -114,7 +114,7 @@ dloader_config_train = {
 }
 
 dloader_config_infer = {
-    "batch_size": 64,
+    "batch_size": 32,
     "shuffle": False,
     "drop_last": False,
     "pin_memory": True,
