@@ -121,6 +121,14 @@ class GrATiF(nn.Module):
         X = context_w[:, :, :self.dim]
         X = X * context_mask
         context_mask = context_mask + target_y[:, :, self.dim:]
+        # print(context_x.size())
+        # print(context_mask.size())
+        # print(target_y.size())
+        # print(target_y[:, :, :self.dim].size())
+        # print(target_y[:, :, self.dim:].size())
+        # print(target_x)
+        # print(target_y[0,10:15,:self.dim])
+        # print(target_y[0,10:15,self.dim:])
         output, target_U_, target_mask_ = self.enc(context_x, X, context_mask, target_y[:, :, :self.dim],
                                                    target_y[:, :, self.dim:])
         return output, target_U_, target_mask_
@@ -129,7 +137,15 @@ class GrATiF(nn.Module):
         return x_time, torch.cat([x_vals, x_mask], -1), y_time, torch.cat([y_vals, y_mask], -1)
 
     def forward(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
+        # print(x_time.size(), x_vals.size(), x_mask.size())
+        # print(y_time.size(), y_vals.size(), y_mask.size())
+        # print(torch.sum(y_vals[0], 0)) => each timepoint를 기준으로 all channels의 observation value를 더한 값, if 0 => 그 timepoint에 all channels에 관측된 게 없음.
+        # print(torch.sum(y_mask[0], 0))
+        # print(torch.sum(y_vals[0], 1)) => each channel을 기준으로 all timepoints에 observation value를 더한 값, if 0 => 그 channel의 all timepoints에 관측 된게 없음
+        # print(torch.sum(y_mask[0], 1))
         context_x, context_y, target_x, target_y = self.convert_data(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
+        # print(context_x.size(), target_x.size())
+        # print(context_y.size(), target_y.size())
         # pdb.set_trace()
         if len(context_y.shape) == 2:
             context_x = context_x.unsqueeze(0)
