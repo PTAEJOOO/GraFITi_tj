@@ -107,9 +107,14 @@ class GrATiF(nn.Module):
             attn_head=4,
             latent_dim=128,
             n_layers=2,
-            device='cuda'):
+            device='cuda',
+            auxiliary=False):
         super().__init__()
-        self.dim = input_dim
+        self.auxiliary = auxiliary
+        if auxiliary:
+            self.dim = input_dim + 1
+        else:
+            self.dim = input_dim
         self.attn_head = attn_head
         self.latent_dim = latent_dim
         self.n_layers = n_layers
@@ -120,7 +125,7 @@ class GrATiF(nn.Module):
         context_mask = context_w[:, :, self.dim:]
         X = context_w[:, :, :self.dim]
         X = X * context_mask
-        context_mask = context_mask + target_y[:, :, self.dim:]
+        context_mask = context_mask + target_y[:, :, self.dim:] # observation mask || target mask
         # print(context_x.size())
         # print(context_mask.size())
         # print(target_y.size())
@@ -135,6 +140,24 @@ class GrATiF(nn.Module):
 
     def convert_data(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
         return x_time, torch.cat([x_vals, x_mask], -1), y_time, torch.cat([y_vals, y_mask], -1)
+    
+    def add_auxiliary(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
+        bs, L, C = x_vals.shape
+
+        x_time = torch.concat((x_time, torch.zeros(bs,1)), dim=-1) # torch.ones(bs,1)
+        x_vals = torch.concat((x_vals, torch.zeros(bs,1,C)), dim=1)
+        x_vals = torch.concat((x_vals, torch.zeros(bs,L+1,1)), dim=-1)
+        x_mask = torch.concat((x_mask, torch.ones(bs,1,C)), dim=1)
+        new_c = (x_mask.sum(dim=-1) > 0).int()
+        x_mask = torch.concat((x_mask, new_c.unsqueeze(-1)), dim=-1)
+
+        y_time = torch.concat((y_time, torch.zeros(bs,1)), dim=-1) # torch.ones(bs,1)
+        y_vals = torch.concat((y_vals, torch.zeros(bs,1,C)), dim=1)
+        y_vals = torch.concat((y_vals, torch.zeros(bs,L+1,1)), dim=-1)
+        y_mask = torch.concat((y_mask, torch.zeros(bs,1,C)), dim=1)
+        y_mask = torch.concat((y_mask, torch.zeros(bs,L+1,1)), dim=-1)
+
+        return x_time, x_vals, x_mask, y_time, y_vals, y_mask
 
     def forward(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
         # print(x_time.size(), x_vals.size(), x_mask.size())
@@ -143,6 +166,9 @@ class GrATiF(nn.Module):
         # print(torch.sum(y_mask[0], 0))
         # print(torch.sum(y_vals[0], 1)) => each channel을 기준으로 all timepoints에 observation value를 더한 값, if 0 => 그 channel의 all timepoints에 관측 된게 없음
         # print(torch.sum(y_mask[0], 1))
+        if self.auxiliary:
+            x_time, x_vals, x_mask, y_time, y_vals, y_mask = self.add_auxiliary(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
+
         context_x, context_y, target_x, target_y = self.convert_data(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
         # print(context_x.size(), target_x.size())
         # print(context_y.size(), target_y.size())
