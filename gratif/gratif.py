@@ -144,18 +144,18 @@ class GrATiF(nn.Module):
     def add_auxiliary(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
         bs, L, C = x_vals.shape
 
-        x_time = torch.concat((x_time, torch.zeros(bs,1)), dim=-1) # torch.ones(bs,1)
-        x_vals = torch.concat((x_vals, torch.zeros(bs,1,C)), dim=1)
-        x_vals = torch.concat((x_vals, torch.zeros(bs,L+1,1)), dim=-1)
-        x_mask = torch.concat((x_mask, torch.ones(bs,1,C)), dim=1)
-        new_c = (x_mask.sum(dim=-1) > 0).int()
+        x_time = torch.concat((x_time, torch.zeros(bs,1).to(self.device)), dim=-1) # torch.ones(bs,1)
+        x_vals = torch.concat((x_vals, torch.zeros(bs,1,C).to(self.device)), dim=1)
+        x_vals = torch.concat((x_vals, torch.zeros(bs,L+1,1).to(self.device)), dim=-1)
+        x_mask = torch.concat((x_mask, torch.ones(bs,1,C).to(self.device)), dim=1)
+        new_c = (x_mask.sum(dim=-1) > 0).int().to(self.device)
         x_mask = torch.concat((x_mask, new_c.unsqueeze(-1)), dim=-1)
 
-        y_time = torch.concat((y_time, torch.zeros(bs,1)), dim=-1) # torch.ones(bs,1)
-        y_vals = torch.concat((y_vals, torch.zeros(bs,1,C)), dim=1)
-        y_vals = torch.concat((y_vals, torch.zeros(bs,L+1,1)), dim=-1)
-        y_mask = torch.concat((y_mask, torch.zeros(bs,1,C)), dim=1)
-        y_mask = torch.concat((y_mask, torch.zeros(bs,L+1,1)), dim=-1)
+        y_time = torch.concat((y_time, torch.zeros(bs,1).to(self.device)), dim=-1) # torch.ones(bs,1)
+        y_vals = torch.concat((y_vals, torch.zeros(bs,1,C).to(self.device)), dim=1)
+        y_vals = torch.concat((y_vals, torch.zeros(bs,L+1,1).to(self.device)), dim=-1)
+        y_mask = torch.concat((y_mask, torch.zeros(bs,1,C).to(self.device)), dim=1)
+        y_mask = torch.concat((y_mask, torch.zeros(bs,L+1,1).to(self.device)), dim=-1)
 
         return x_time, x_vals, x_mask, y_time, y_vals, y_mask
 

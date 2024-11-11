@@ -244,12 +244,20 @@ for epoch in range(1, ARGS.epochs + 1):
     if val_loss < best_val_loss:
         best_val_loss = val_loss
 
-        torch.save({'args': ARGS,
-                    'epoch': epoch,
-                    'state_dict': MODEL.state_dict(),
-                    'optimizer_state_dict': OPTIMIZER.state_dict(),
-                    'loss': train_loss,
-                    }, 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
+        if ARGS.auxiliary:
+            torch.save({'args': ARGS,
+                        'epoch': epoch,
+                        'state_dict': MODEL.state_dict(),
+                        'optimizer_state_dict': OPTIMIZER.state_dict(),
+                        'loss': train_loss,
+                        }, 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
+        else:
+            torch.save({'args': ARGS,
+                        'epoch': epoch,
+                        'state_dict': MODEL.state_dict(),
+                        'optimizer_state_dict': OPTIMIZER.state_dict(),
+                        'loss': train_loss,
+                        }, 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
         early_stop = 0
     else:
         early_stop += 1
@@ -260,7 +268,10 @@ for epoch in range(1, ARGS.epochs + 1):
 
     # LOGGER.log_epoch_end(epoch)
     if (epoch == ARGS.epochs) or (es == True):
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
+        if ARGS.auxiliary:
+            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
+        else:
+            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
         MODEL.load_state_dict(chp['state_dict'])
         loss_list = []
         count = 0
