@@ -250,14 +250,15 @@ for epoch in range(1, ARGS.epochs + 1):
                         'state_dict': MODEL.state_dict(),
                         'optimizer_state_dict': OPTIMIZER.state_dict(),
                         'loss': train_loss,
-                        }, 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
+                        }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
+            # 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
         else:
             torch.save({'args': ARGS,
                         'epoch': epoch,
                         'state_dict': MODEL.state_dict(),
                         'optimizer_state_dict': OPTIMIZER.state_dict(),
                         'loss': train_loss,
-                        }, 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
+                        }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
         early_stop = 0
     else:
         early_stop += 1
@@ -269,9 +270,9 @@ for epoch in range(1, ARGS.epochs + 1):
     # LOGGER.log_epoch_end(epoch)
     if (epoch == ARGS.epochs) or (es == True):
         if ARGS.auxiliary:
-            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
+            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
         else:
-            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '.h5')
+            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
         MODEL.load_state_dict(chp['state_dict'])
         loss_list = []
         count = 0
