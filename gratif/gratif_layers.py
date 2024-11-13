@@ -6,7 +6,7 @@ from gratif.attention import MAB2
 
 
 class Encoder(nn.Module):
-    def __init__(self, dim=41, nkernel=128, n_layers=3, attn_head=4, device="cuda"):
+    def __init__(self, dim=41, nkernel=128, n_layers=3, attn_head=4, device="cuda", wocat=False):
         super(Encoder, self).__init__()
         self.dim = dim + 2
         self.nheads = attn_head
@@ -20,6 +20,7 @@ class Encoder(nn.Module):
         self.edge_nn = nn.ModuleList()
         self.channel_attn = nn.ModuleList()
         self.device = device
+        self.wocat = wocat
         self.output = nn.Linear(3 * nkernel, 1)
         for i in range(self.n_layers):
             self.channel_time_attn.append(MAB2(nkernel, 2 * nkernel, 2 * nkernel, nkernel, self.nheads))
@@ -129,7 +130,11 @@ class Encoder(nn.Module):
             U_ = self.relu(U_ + self.edge_nn[i](torch.cat([U_, k_t, k_c], -1))) * mk_[:, :, None].repeat(1, 1, self.nkernel)
 
             # updating only channel nodes
-            C_ = self.channel_attn[i](C__, C__)
+            if self.wocat:
+                C_ = C__
+            else:
+                C_ = self.channel_attn[i](C__, C__)
+
             T_ = T__
 
         k_t = self.gather(T_, T_inds_)

@@ -28,6 +28,7 @@ parser.add_argument("-ft", "--forc-time", default=0, type=int, help="forecast ho
 parser.add_argument("-ct", "--cond-time", default=36, type=int, help="conditioning range in hours")
 parser.add_argument("-nf", "--nfolds", default=5, type=int, help="#folds for crossvalidation")
 parser.add_argument("-ax", "--auxiliary", default=False, const=True, help="use auxiliary node", nargs="?")
+parser.add_argument("-wocat", "--wocat", default=False, const=True, help="with-out channel attention", nargs="?")
 
 # fmt: on
 
@@ -162,7 +163,8 @@ MODEL_CONFIG = {
     "latent_dim": ARGS.latent_dim,
     "n_layers": ARGS.nlayers,
     "device": DEVICE,
-    "auxiliary": ARGS.auxiliary
+    "auxiliary": ARGS.auxiliary,
+    "wocat": ARGS.wocat
 }
 
 MODEL = GrATiF(**MODEL_CONFIG).to(DEVICE)
@@ -245,20 +247,35 @@ for epoch in range(1, ARGS.epochs + 1):
         best_val_loss = val_loss
 
         if ARGS.auxiliary:
-            torch.save({'args': ARGS,
-                        'epoch': epoch,
-                        'state_dict': MODEL.state_dict(),
-                        'optimizer_state_dict': OPTIMIZER.state_dict(),
-                        'loss': train_loss,
-                        }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
-            # 'saved_models/' + ARGS.dataset + '_' + str(experiment_id) + '_ax' + '.h5')
+            if ARGS.wocat:
+                torch.save({'args': ARGS,
+                            'epoch': epoch,
+                            'state_dict': MODEL.state_dict(),
+                            'optimizer_state_dict': OPTIMIZER.state_dict(),
+                            'loss': train_loss,
+                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5')
+            else:
+                torch.save({'args': ARGS,
+                            'epoch': epoch,
+                            'state_dict': MODEL.state_dict(),
+                            'optimizer_state_dict': OPTIMIZER.state_dict(),
+                            'loss': train_loss,
+                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
         else:
-            torch.save({'args': ARGS,
-                        'epoch': epoch,
-                        'state_dict': MODEL.state_dict(),
-                        'optimizer_state_dict': OPTIMIZER.state_dict(),
-                        'loss': train_loss,
-                        }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
+            if ARGS.wocat:
+                torch.save({'args': ARGS,
+                            'epoch': epoch,
+                            'state_dict': MODEL.state_dict(),
+                            'optimizer_state_dict': OPTIMIZER.state_dict(),
+                            'loss': train_loss,
+                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5')
+            else:
+                torch.save({'args': ARGS,
+                            'epoch': epoch,
+                            'state_dict': MODEL.state_dict(),
+                            'optimizer_state_dict': OPTIMIZER.state_dict(),
+                            'loss': train_loss,
+                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
         early_stop = 0
     else:
         early_stop += 1
@@ -270,9 +287,15 @@ for epoch in range(1, ARGS.epochs + 1):
     # LOGGER.log_epoch_end(epoch)
     if (epoch == ARGS.epochs) or (es == True):
         if ARGS.auxiliary:
-            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
+            if ARGS.wocat:
+                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5')
+            else:
+                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
         else:
-            chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
+            if ARGS.wocat:
+                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5')
+            else:
+                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
         MODEL.load_state_dict(chp['state_dict'])
         loss_list = []
         count = 0

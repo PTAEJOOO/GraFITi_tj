@@ -1,6 +1,6 @@
 ### grafiti ###
 
-nlayers="2 4"
+nlayers="2"
 attn_head="2 4"
 latent_dim="64 128"
 
@@ -10,12 +10,12 @@ for nlayer in $nlayers; do
             python train_grafiti.py \
             --epochs 100 --learn-rate 0.001 --batch-size 128 \
             --attn-head $at --latent-dim $ld --nlayers $nlayer \
-            --dataset physionet2012 --fold 0 -ct 36 -ft 12 -ax
+            --dataset physionet2012 --fold 0 -ct 36 -ft 12 -wocat -ax
 
             python train_grafiti.py \
             --epochs 100 --learn-rate 0.001 --batch-size 128 \
             --attn-head $at --latent-dim $ld --nlayers $nlayer \
-            --dataset physionet2012 --fold 0 -ct 36 -ft 12
+            --dataset physionet2012 --fold 0 -ct 36 -ft 12 -wocat
         done
     done   
 done
