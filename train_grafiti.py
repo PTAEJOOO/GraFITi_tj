@@ -268,7 +268,7 @@ for epoch in range(1, ARGS.epochs + 1):
                             'state_dict': MODEL.state_dict(),
                             'optimizer_state_dict': OPTIMIZER.state_dict(),
                             'loss': train_loss,
-                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5')
+                            }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og.h5')
             else:
                 torch.save({'args': ARGS,
                             'epoch': epoch,
@@ -293,7 +293,7 @@ for epoch in range(1, ARGS.epochs + 1):
                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
         else:
             if ARGS.wocat:
-                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5')
+                chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og.h5')
             else:
                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
         MODEL.load_state_dict(chp['state_dict'])
