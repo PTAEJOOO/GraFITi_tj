@@ -177,31 +177,9 @@ def predict_fn(model, batch) -> tuple[Tensor, Tensor, Tensor]:
     output, target_U_, target_mask_ = model(T, X, M, TY, Y, MY)
     return target_U_, output.squeeze(), target_mask_
 
-
-batch = next(iter(TRAIN_LOADER))
-
-# i = 0
-# while i<20:
-#     T, X, M, TY, Y, MY = (tensor.to(DEVICE) for tensor in batch)
-#     print(X.size(), Y.size())
-#     i += 1
-#     batch = next(iter(TRAIN_LOADER))
-# sys.exit(0)
-
 MODEL.zero_grad(set_to_none=True)
 
-# # Forward
-# Y, YHAT, MASK = predict_fn(MODEL, batch)
-# # Backward
-# R = LOSS(Y, YHAT, MASK)
-# assert torch.isfinite(R).item(), "Model Collapsed!"
-# # R.backward()
-
-# # Reset
-# MODEL.zero_grad(set_to_none=True)
-
 ## Initialize Optimizer
-
 from torch.optim import AdamW
 
 OPTIMIZER = AdamW(MODEL.parameters(), **OPTIMIZER_CONFIG)
@@ -224,7 +202,7 @@ for epoch in range(1, ARGS.epochs + 1):
         # Backward
         R.backward()
         OPTIMIZER.step()
-        # exit()
+        exit()
     # exit()    
     epoch_time = time.time()
     train_loss = torch.mean(torch.Tensor(loss_list))

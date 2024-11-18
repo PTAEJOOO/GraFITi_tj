@@ -124,8 +124,8 @@ class GrATiF(nn.Module):
         self.enc = gratif_layers.Encoder(self.dim, self.latent_dim, self.n_layers, self.attn_head, device=device, wocat=wocat)
 
     def get_extrapolation(self, context_x, context_w, target_x, target_y):
-        context_mask = context_w[:, :, self.dim:]
-        X = context_w[:, :, :self.dim]
+        context_mask = context_w[:, :, self.dim:] # context_w[:, :, self.dim:] = original x_mask
+        X = context_w[:, :, :self.dim] # context_w[:, :, :self.dim] = original x_vals
         X = X * context_mask
         context_mask = context_mask + target_y[:, :, self.dim:] # observation mask || target mask
         # print(context_x.size())
