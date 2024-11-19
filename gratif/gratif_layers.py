@@ -76,7 +76,7 @@ class Encoder(nn.Module):
         U_ = torch.stack([pad(r[m]) for r, m in zip(value, mk_bool)]).contiguous()  # BxTxC (values) -> Bxfull_len // observation의 edge feature = observation value
         target_U_ = torch.stack([pad(r[m]) for r, m in zip(target_value, mk_bool)]).contiguous()  # BxK_ = Bxfull_len // tagert edge = target value = 예측하고자 하는 값
         target_mask_ = torch.stack([pad(r[m]) for r, m in zip(target_mask, mk_bool)]).contiguous()  # BxK_ = Bxfull_len // target_mask에서 mask==1인 값들만 가져옴. 나중에 output masking 할때 사용 
-                                                                                                    # encoder에 들어오기 전에 obs mask + target mask해둬서 이렇게 구해도 target mask만 나옴.
+                                                                                                    # encoder에 들어오기 전에 context_mask=obs mask+target mask해둬서 mk_bool에도 반영됨. 이렇게 구해도 target mask만 나옴.
         C_inds_ = torch.stack([pad(r[m]) for r, m in zip(C_inds, mk_bool)]).contiguous()  # BxK_ = Bxfull_len
         mk_ = torch.stack([pad(r[m]) for r, m in zip(mask, mk_bool)]).contiguous()  # BxK_ = Bxfull_len
         # print(T_inds_.size(), U_.size(), target_U_.size(), target_mask_.size(), C_inds_.size(), mk_.size())
