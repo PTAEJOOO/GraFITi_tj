@@ -16,7 +16,7 @@ latent_dim="16 32 64"
 #     done   
 # done
 
-python train_grafiti.py --epochs 100 --learn-rate 0.001 --batch-size 128 --attn-head 1 --latent-dim 64 --nlayers 1 --dataset physionet2012 --fold 0 -ct 36 -ft 12
+python train_grafiti.py --epochs 100 --learn-rate 0.001 --batch-size 32 --dataset physionet2012 --fold 0 -ct 36 -ft 12
 
 # do
 #     python train_grafiti.py \
