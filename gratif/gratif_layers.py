@@ -46,7 +46,7 @@ class Encoder(nn.Module):
         """
         context_x (B, T, C)
         value (B, T, C)
-        mask (B, T, C)
+        mask (B, T, C) <= context_mask + target_mask
         target_value (B, T, C)
         target_mask (B, T, C)
 
@@ -99,6 +99,7 @@ class Encoder(nn.Module):
         temp_T_inds = torch.ones_like(T[:, :, 0]).cumsum(1)[:, :, None].repeat(1, 1, C_inds_.shape[1]) - 1
         T_mask = (T_mask == temp_T_inds).to(torch.float32)  # BxTxK_
         T_mask = T_mask * mk_[:, None, :].repeat(1, T_mask.shape[1], 1)
+        # print(f"C_mask = {C_mask.size()}, T_mask = {T_mask.size()}")
 
         # print(f"before embedding: edge size = {U_.size()}, time node size = {T.size()}, channel node size = {C_.size()}")
         U_ = self.relu(self.edge_init(U_)) * mk_[:, :, None].repeat(1, 1, self.nkernel)  # edge embedding
@@ -140,8 +141,8 @@ class Encoder(nn.Module):
         k_t = self.gather(T_, T_inds_)
         k_c = self.gather(C_, C_inds_)
         output = self.output(torch.cat([U_, k_t, k_c], -1))
-        # print("#"*50)
-        # print(f"U_ size = {U_.size()}, k_t size = {k_t.size()}, k_c size = {k_c.size()}, concat size = {torch.cat([U_, k_t, k_c], -1).size()}")
-        # print(f"output size = {output.size()}, target_U_ size = {target_U_.size()}, target_mask_ size = {target_mask_.size()}")
+        print("#"*50)
+        print(f"U_ size = {U_.size()}, k_t size = {k_t.size()}, k_c size = {k_c.size()}, concat size = {torch.cat([U_, k_t, k_c], -1).size()}")
+        print(f"output size = {output.size()}, target_U_ size = {target_U_.size()}, target_mask_ size = {target_mask_.size()}")
 
         return output, target_U_, target_mask_
