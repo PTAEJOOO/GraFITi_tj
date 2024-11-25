@@ -158,7 +158,8 @@ MODEL_CONFIG = {
     "latent_dim": ARGS.latent_dim,
     "n_layers": ARGS.nlayers,
     "device": DEVICE,
-    "auxiliary": ARGS.auxiliary
+    "auxiliary": ARGS.auxiliary,
+    "wocat": ARGS.wocat
 }
 
 MODEL = GrATiF(**MODEL_CONFIG).to(DEVICE)
@@ -169,18 +170,22 @@ def predict_fn(model, batch) -> tuple[Tensor, Tensor, Tensor]:
     output, target_U_, target_mask_ = model(T, X, M, TY, Y, MY)
     return target_U_, output.squeeze(), target_mask_
 
-MODEL.zero_grad(set_to_none=True)
+# MODEL.zero_grad(set_to_none=True)
 
 if ARGS.auxiliary:
     if ARGS.wocat:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+                         + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_wo_ax' + '.h5', map_location=torch.device('cpu'))
     else:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+                         + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_ax' + '.h5', map_location=torch.device('cpu'))
 else:
     if ARGS.wocat:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+                         + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_wo_og.h5', map_location=torch.device('cpu'))
     else:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+                         + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '.h5', map_location=torch.device('cpu'))
 MODEL.load_state_dict(chp['state_dict'])
 loss_list = []
 count = 0
@@ -196,15 +201,19 @@ with torch.no_grad():
 test_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
 print("test_loss : ", test_loss.item())
 
-with open("log/eval_2.txt", "a") as file:
+with open("log/eval_36_12_wo_og..txt", "a") as file:
     if ARGS.auxiliary:
         if ARGS.wocat:
-            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + ' : ' + str(test_loss.item())
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+            + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_wo_ax' + ' : ' + str(test_loss.item())
         else:
-            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + ' : ' + str(test_loss.item())
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+            + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_ax' + ' : ' + str(test_loss.item())
     else:
         if ARGS.wocat:
-            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo : ' + str(test_loss.item())
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+            + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + '_wo_og : ' + str(test_loss.item())
         else:
-            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + ' : ' + str(test_loss.item())
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
+            + '_' + str(ARGS.cond_time) + '_' + str(ARGS.forc_time) + ' : ' + str(test_loss.item())
     file.write(content + "\n")
