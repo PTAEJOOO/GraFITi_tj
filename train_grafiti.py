@@ -5,6 +5,8 @@ from random import SystemRandom
 
 from tqdm import tqdm
 
+from imputers import *
+
 # fmt: off
 parser = argparse.ArgumentParser(description="Training Script for USHCN dataset.")
 parser.add_argument("-q", "--quiet", default=False, const=True, help="kernel-inititialization", nargs="?")
@@ -30,9 +32,22 @@ parser.add_argument("-nf", "--nfolds", default=5, type=int, help="#folds for cro
 parser.add_argument("-ax", "--auxiliary", default=False, const=True, help="use auxiliary node", nargs="?")
 parser.add_argument("-wocat", "--wocat", default=False, const=True, help="with-out channel attention", nargs="?")
 
+parser.add_argument('--imputer', default="mice",  type=str, help="Name of the imputer: mean, knn, mf or mice")
+parser.add_argument('--n-runs', type=int, default=5)
+parser.add_argument('--in-sample', type=str_to_bool, nargs='?', const=True, default=True)
+# SpatialKNNImputer params
+parser.add_argument('--k', type=int, default=10)
+# MFImputer params
+parser.add_argument('--rank', type=int, default=10)
+# MICEImputer params
+parser.add_argument('--mice-iterations', type=int, default=10)
+parser.add_argument('--mice-n-features', type=int, default=None)
+
+
 # fmt: on
 
 ARGS = parser.parse_args()
+
 print(' '.join(sys.argv))
 experiment_id = int(SystemRandom().random() * 10000000)
 print(ARGS, experiment_id)
@@ -75,6 +90,20 @@ if ARGS.seed is not None:
     torch.manual_seed(ARGS.seed)
     random.seed(ARGS.seed)
     np.random.seed(ARGS.seed)
+
+#############################################################################################
+if ARGS.imputer == 'mean':
+    imputer = MeanImputer(in_sample=ARGS.in_sample)
+# elif ARGS.imputer == 'knn':
+#     imputer = SpatialKNNImputer(adj=ARGS.adj, k=ARGS.k)
+elif ARGS.imputer == 'mf':
+    imputer = MatrixFactorizationImputer(rank=ARGS.rank)
+elif ARGS.imputer == 'mice':
+    imputer = MICEImputer(max_iter=ARGS.mice_iterations,
+                              n_nearest_features=ARGS.mice_n_features,
+                              in_sample=ARGS.in_sample)
+
+#############################################################################################
 
 OPTIMIZER_CONFIG = {
     "lr": ARGS.learn_rate,
@@ -164,7 +193,9 @@ MODEL_CONFIG = {
     "n_layers": ARGS.nlayers,
     "device": DEVICE,
     "auxiliary": ARGS.auxiliary,
-    "wocat": ARGS.wocat
+    "wocat": ARGS.wocat,
+    "imputer": imputer,
+    "cond_time": ARGS.cond_time
 }
 
 MODEL = GrATiF(**MODEL_CONFIG).to(DEVICE)
@@ -201,7 +232,7 @@ for epoch in range(1, ARGS.epochs + 1):
         # Backward
         R.backward()
         OPTIMIZER.step()
-        # exit()
+        exit()
     # exit()    
     epoch_time = time.time()
     train_loss = torch.mean(torch.Tensor(loss_list))
