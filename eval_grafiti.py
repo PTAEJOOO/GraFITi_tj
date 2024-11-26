@@ -28,6 +28,7 @@ parser.add_argument("-ft", "--forc-time", default=0, type=int, help="forecast ho
 parser.add_argument("-ct", "--cond-time", default=36, type=int, help="conditioning range in hours")
 parser.add_argument("-nf", "--nfolds", default=5, type=int, help="#folds for crossvalidation")
 parser.add_argument("-ax", "--auxiliary", default=False, const=True, help="use auxiliary node", nargs="?")
+parser.add_argument("-wocat", "--wocat", default=False, const=True, help="with-out channel attention", nargs="?")
 
 # fmt: on
 
@@ -171,9 +172,15 @@ def predict_fn(model, batch) -> tuple[Tensor, Tensor, Tensor]:
 MODEL.zero_grad(set_to_none=True)
 
 if ARGS.auxiliary:
-    chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
+    if ARGS.wocat:
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5', map_location=torch.device('cpu'))
+    else:
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
 else:
-    chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
+    if ARGS.wocat:
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5', map_location=torch.device('cpu'))
+    else:
+        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
 MODEL.load_state_dict(chp['state_dict'])
 loss_list = []
 count = 0
@@ -189,9 +196,15 @@ with torch.no_grad():
 test_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
 print("test_loss : ", test_loss.item())
 
-with open("log/eval_1.txt", "a") as file:
+with open("log/eval_2.txt", "a") as file:
     if ARGS.auxiliary:
-        content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + ' : ' + str(test_loss.item())
+        if ARGS.wocat:
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + ' : ' + str(test_loss.item())
+        else:
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + ' : ' + str(test_loss.item())
     else:
-        content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + ' : ' + str(test_loss.item())
+        if ARGS.wocat:
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo : ' + str(test_loss.item())
+        else:
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + ' : ' + str(test_loss.item())
     file.write(content + "\n")
