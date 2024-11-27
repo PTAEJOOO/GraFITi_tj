@@ -8,7 +8,8 @@ from gratif import gratif_layers
 from torch.nn.utils.rnn import pad_sequence
 import pdb
 
-from imputers import *
+import sys
+
 
 class Batch(NamedTuple):
     r"""A single sample of the data."""
@@ -159,7 +160,6 @@ class GrATiF(nn.Module):
         return x_time, x_vals, x_mask, y_time, y_vals, y_mask
 
     def impute(self, x_vals, x_mask):
-        import sys
         # x_vals on only observation range for imputation
         temp_x_vals = x_vals[:,self.cond_time:,:]
         temp_x_mask = x_mask[:,self.cond_time:,:]
@@ -179,6 +179,14 @@ class GrATiF(nn.Module):
         return x_vals_, x_mask_
 
     def forward(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
+        print(f"x_vals shape = {x_vals.shape}")
+        print(x_mask[0].sum(dim=-1))
+        print(y_mask[0].sum(dim=-1))
+        print(x_mask[1].sum(dim=-1))
+        print(y_mask[1].sum(dim=-1))
+        print(x_mask[2].sum(dim=-1))
+        print(y_mask[2].sum(dim=-1))
+        sys.exit(0)
         if self.auxiliary:
             x_time, x_vals, x_mask, y_time, y_vals, y_mask = self.add_auxiliary(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
 
