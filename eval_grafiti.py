@@ -201,7 +201,7 @@ with torch.no_grad():
 test_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
 print("test_loss : ", test_loss.item())
 
-with open("log/eval_36_12_wo_ax.txt", "a") as file:
+with open("log/eval_36_12_mha_ax.txt", "a") as file:
     if ARGS.auxiliary:
         if ARGS.wocat:
             content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) \
