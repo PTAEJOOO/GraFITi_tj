@@ -2,9 +2,9 @@
 ## mha
 ## ax
 
-nlayers="2 4"
-attn_head="2 4"
-latent_dim="64 128 256"
+nlayers="4"
+attn_head="4"
+latent_dim="256"
 
 for nlayer in $nlayers; do
     for at in $attn_head; do
