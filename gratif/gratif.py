@@ -58,14 +58,8 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
     target_mask: list[Tensor] = []
 
     for sample in batch:
-        t, x, t_target = sample.inputs
+        t, x, t_target = sample.inputs # ex) t=(35,), x=(35,37), t_target=(10,)
         y = sample.targets
-        print("tsdm collate")
-        print(f"t = {t.shape}")
-        print(f"x = {x.shape}")
-        print(f"t_target = {t_target.shape}")
-        print(f"y = {y.shape}")
-        sys.exit(0)
 
         # get whole time interval
         sorted_idx = torch.argsort(t)
@@ -89,12 +83,12 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
         context_x.append(torch.cat([t, t_target], dim=0))
         x_vals_temp = torch.zeros_like(x)
         y_vals_temp = torch.zeros_like(y)
-        context_vals.append(torch.cat([x, y_vals_temp], dim=0))
-        context_mask.append(torch.cat([mask_x, y_vals_temp], dim=0))
+        context_vals.append(torch.cat([x, y_vals_temp], dim=0)) # ex) (45,47)
+        context_mask.append(torch.cat([mask_x, y_vals_temp], dim=0)) # ex) (45,47)
         # context_y = torch.cat([context_vals, context_mask], dim=2)
 
-        target_vals.append(torch.cat([x_vals_temp, y], dim=0))
-        target_mask.append(torch.cat([x_vals_temp, mask_y], dim=0))
+        target_vals.append(torch.cat([x_vals_temp, y], dim=0)) # ex) (45,47)
+        target_mask.append(torch.cat([x_vals_temp, mask_y], dim=0)) # ex) (45,47)
         # target_y = torch.cat([target_vals, target_mask], dim=2)
 
     return Batch(
