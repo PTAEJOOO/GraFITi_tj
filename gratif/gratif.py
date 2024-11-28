@@ -60,6 +60,12 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
     for sample in batch:
         t, x, t_target = sample.inputs
         y = sample.targets
+        print("tsdm collate")
+        print(f"t = {t.shape}")
+        print(f"x = {x.shape}")
+        print(f"t_target = {t_target.shape}")
+        print(f"y = {y.shape}")
+        sys.exit(0)
 
         # get whole time interval
         sorted_idx = torch.argsort(t)

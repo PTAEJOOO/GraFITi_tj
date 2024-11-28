@@ -28,6 +28,7 @@ from tsdm.utils import is_partition
 from tsdm.utils.strings import repr_namedtuple
 import pdb
 import pandas as pd
+import sys
 
 class Inputs(NamedTuple):
     r"""A single sample of the data."""
@@ -87,7 +88,7 @@ class TaskDataset(Dataset):
 
     def __getitem__(self, key: int) -> Sample:
         t, x = self.tensors[key]
-        observations = t <= self.observation_time
+        observations = t <= self.observation_time # self.observation_time 는 normalize 되어 있음, ex) 36 -> 0.7659
         first_target = observations.sum()
         sample_mask = slice(0, first_target)
         target_mask = slice(first_target, first_target + self.prediction_steps)
@@ -195,15 +196,15 @@ class Physionet2012(BaseTask):
         tsb = ts_['B'][0]
         tsc = ts_['C'][0]
         # tsc = tsc.drop(columns=[''])
-        ts = pd.concat([tsa, tsb, tsc])
+        ts = pd.concat([tsa, tsb, tsc]) # shape = (526841, 37)
         self.encoder.fit(ts)
-        ts = self.encoder.encode(ts)
+        ts = self.encoder.encode(ts) # shape = (526841, 37)
         index_encoder = self.encoder.index_encoders["Time"]
         self.observation_time /= index_encoder.param.xmax  # type: ignore[assignment]
 
         # drop values outside 5 sigma range
         ts = ts[(-5 < ts) & (ts < 5)]
-        ts = ts.dropna(axis=1, how="all").copy()
+        ts = ts.dropna(axis=1, how="all").copy() # shape = (526841, 37)
         return ts
 
     @cached_property

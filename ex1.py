@@ -56,13 +56,13 @@ print(' '.join(sys.argv))
 experiment_id = int(SystemRandom().random() * 10000000)
 print(ARGS, experiment_id)
 
-# import yaml
+import yaml
 
-# if ARGS.config is not None:
-#     cfg_file, cfg_id = ARGS.config
-#     with open(cfg_file, "r") as file:
-#         cfg_dict = yaml.safe_load(file)
-#         vars(ARGS).update(**cfg_dict[int(cfg_id)])
+if ARGS.config is not None:
+    cfg_file, cfg_id = ARGS.config
+    with open(cfg_file, "r") as file:
+        cfg_dict = yaml.safe_load(file)
+        vars(ARGS).update(**cfg_dict[int(cfg_id)])
 
 print(ARGS)
 
@@ -145,13 +145,14 @@ elif ARGS.dataset == 'physionet2012':
 #     X = data['train_X']
 
 from gratif.gratif import tsdm_collate
+from tsdm.tasks.physionet2012 import physionet_collate
 
 dloader_config_train = {
     "batch_size": ARGS.batch_size,
     "shuffle": True,
     "drop_last": True,
     "pin_memory": True,
-    "num_workers": 4,
+    "num_workers": 1,
     "collate_fn": tsdm_collate,
 }
 
