@@ -32,7 +32,7 @@ parser.add_argument("-ldim", "--latent-dim", default=128, type=int, help="")
 parser.add_argument("-dset", "--dataset", default="ushcn", type=str, help="Name of the dataset")
 parser.add_argument("-ft", "--forc-time", default=0, type=int, help="forecast horizon in hours")
 parser.add_argument("-ct", "--cond-time", default=36, type=int, help="conditioning range in hours")
-parser.add_argument("-nf", "--nfolds", default=5, type=int, help="#folds for crossvalidation")
+parser.add_argument("-nf", "--nfolds", default=1, type=int, help="#folds for crossvalidation")
 parser.add_argument("-ax", "--auxiliary", default=False, const=True, help="use auxiliary node", nargs="?")
 parser.add_argument("-wocat", "--wocat", default=False, const=True, help="with-out channel attention", nargs="?")
 
@@ -148,7 +148,8 @@ from gratif.gratif import tsdm_collate
 from tsdm.tasks.physionet2012 import physionet_collate
 
 dloader_config_train = {
-    "batch_size": ARGS.batch_size,
+    # "batch_size": ARGS.batch_size,
+    "batch_size": 8128,
     "shuffle": True,
     "drop_last": True,
     "pin_memory": True,
@@ -156,8 +157,17 @@ dloader_config_train = {
     "collate_fn": tsdm_collate,
 }
 
-dloader_config_infer = {
-    "batch_size": 32,
+dloader_config_valid = {
+    "batch_size": 2037,
+    "shuffle": False,
+    "drop_last": False,
+    "pin_memory": True,
+    "num_workers": 0,
+    "collate_fn": tsdm_collate,
+}
+
+dloader_config_test = {
+    "batch_size": 1798,
     "shuffle": False,
     "drop_last": False,
     "pin_memory": True,
@@ -166,10 +176,10 @@ dloader_config_infer = {
 }
 
 TRAIN_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_train)
-INFER_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_infer)
-VALID_LOADER = TASK.get_dataloader((ARGS.fold, "valid"), **dloader_config_infer)
-TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_infer)
-EVAL_LOADERS = {"train": INFER_LOADER, "valid": VALID_LOADER, "test": TEST_LOADER}
+# INFER_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_infer)
+VALID_LOADER = TASK.get_dataloader((ARGS.fold, "valid"), **dloader_config_valid)
+TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_test)
+# EVAL_LOADERS = {"train": INFER_LOADER, "valid": VALID_LOADER, "test": TEST_LOADER}
 
 ######################################################################################
 
