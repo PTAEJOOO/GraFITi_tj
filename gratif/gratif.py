@@ -54,6 +54,7 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
     context_x: list[Tensor] = []
     context_vals: list[Tensor] = []
     context_mask: list[Tensor] = []
+    target_x: list[Tensor] = []
     target_vals: list[Tensor] = []
     target_mask: list[Tensor] = []
 
@@ -80,25 +81,51 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
         y_vals.append(y)
         y_mask.append(mask_y)
 
-        context_x.append(torch.cat([t, t_target], dim=0))
-        x_vals_temp = torch.zeros_like(x)
-        y_vals_temp = torch.zeros_like(y)
-        context_vals.append(torch.cat([x, y_vals_temp], dim=0)) # ex) (45,47)
-        context_mask.append(torch.cat([mask_x, y_vals_temp], dim=0)) # ex) (45,47)
-        # context_y = torch.cat([context_vals, context_mask], dim=2)
+        # context_x.append(torch.cat([t, t_target], dim=0))
+        # x_vals_temp = torch.zeros_like(x)
+        # y_vals_temp = torch.zeros_like(y)
+        # context_vals.append(torch.cat([x, y_vals_temp], dim=0)) # ex) (45,47)
+        # context_mask.append(torch.cat([mask_x, y_vals_temp], dim=0)) # ex) (45,47)
+        # # context_y = torch.cat([context_vals, context_mask], dim=2)
 
-        target_vals.append(torch.cat([x_vals_temp, y], dim=0)) # ex) (45,47)
-        target_mask.append(torch.cat([x_vals_temp, mask_y], dim=0)) # ex) (45,47)
-        # target_y = torch.cat([target_vals, target_mask], dim=2)
+        # target_vals.append(torch.cat([x_vals_temp, y], dim=0)) # ex) (45,47)
+        # target_mask.append(torch.cat([x_vals_temp, mask_y], dim=0)) # ex) (45,47)
+        # # target_y = torch.cat([target_vals, target_mask], dim=2)
+
+        context_x.append(t)
+        context_vals.append(x)
+        context_mask.append(mask_x)
+        target_x.append(t_target)
+        target_vals.append(y)
+        target_mask.append(mask_y)
+
+    x_time=pad_sequence(context_x, batch_first=True).squeeze()
+    x_vals=pad_sequence(context_vals, batch_first=True, padding_value=0).squeeze()
+    x_mask=pad_sequence(context_mask, batch_first=True).squeeze()
+    y_time=pad_sequence(target_x, batch_first=True).squeeze()
+    y_vals=pad_sequence(target_vals, batch_first=True, padding_value=0).squeeze()
+    y_mask=pad_sequence(target_mask, batch_first=True).squeeze()
+
+    x_vals_temp = torch.zeros_like(x_vals)
+    y_vals_temp = torch.zeros_like(y_vals)
 
     return Batch(
-        x_time=pad_sequence(context_x, batch_first=True).squeeze(),
-        x_vals=pad_sequence(context_vals, batch_first=True, padding_value=0).squeeze(),
-        x_mask=pad_sequence(context_mask, batch_first=True).squeeze(),
-        y_time=pad_sequence(context_x, batch_first=True).squeeze(),
-        y_vals=pad_sequence(target_vals, batch_first=True, padding_value=0).squeeze(),
-        y_mask=pad_sequence(target_mask, batch_first=True).squeeze(),
+        x_time=torch.cat([x_time, y_time],dim=1),
+        x_vals=torch.cat([x_vals, y_vals_temp], dim=1),
+        x_mask=torch.cat([x_mask, y_vals_temp], dim=1),
+        y_time=torch.cat([x_time, y_time],dim=1),
+        y_vals=torch.cat([x_vals_temp, y_vals], dim=1),
+        y_mask=torch.cat([x_vals_temp, y_mask], dim=1),
     )
+
+    # return Batch(
+    #     x_time=pad_sequence(context_x, batch_first=True).squeeze(),
+    #     x_vals=pad_sequence(context_vals, batch_first=True, padding_value=0).squeeze(),
+    #     x_mask=pad_sequence(context_mask, batch_first=True).squeeze(),
+    #     y_time=pad_sequence(context_x, batch_first=True).squeeze(),
+    #     y_vals=pad_sequence(target_vals, batch_first=True, padding_value=0).squeeze(),
+    #     y_mask=pad_sequence(target_mask, batch_first=True).squeeze(),
+    # )
 
 
 class GrATiF(nn.Module):
