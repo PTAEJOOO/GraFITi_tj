@@ -70,8 +70,8 @@ def tsdm_collate(batch: list[Sample]) -> Batch:
         mask_x = x.isfinite()
 
         # nan to zeros
-        x = torch.nan_to_num(x)
-        y = torch.nan_to_num(y)
+        # x = torch.nan_to_num(x)
+        # y = torch.nan_to_num(y)
 
         x_vals.append(x[sorted_idx])
         x_time.append(t[sorted_idx])
@@ -206,14 +206,6 @@ class GrATiF(nn.Module):
         return x_vals_, x_mask_
 
     def forward(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
-        print(f"x_vals shape = {x_vals.shape}")
-        print(x_mask[0].sum(dim=-1))
-        print(y_mask[0].sum(dim=-1))
-        print(x_mask[1].sum(dim=-1))
-        print(y_mask[1].sum(dim=-1))
-        print(x_mask[2].sum(dim=-1))
-        print(y_mask[2].sum(dim=-1))
-        sys.exit(0)
         if self.auxiliary:
             x_time, x_vals, x_mask, y_time, y_vals, y_mask = self.add_auxiliary(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
 
