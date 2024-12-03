@@ -101,8 +101,8 @@ elif ARGS.dataset == 'physionet2012':
 
 from gratif.gratif import tsdm_collate
 
-dloader_config_infer = {
-    "batch_size": 32,
+dloader_config_test = {
+    "batch_size": 1798,
     "shuffle": False,
     "drop_last": False,
     "pin_memory": True,
@@ -110,7 +110,7 @@ dloader_config_infer = {
     "collate_fn": tsdm_collate,
 }
 
-TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_infer)
+TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_test)
 
 ################################################################################
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
