@@ -195,16 +195,23 @@ for batch in tqdm(TRAIN_LOADER):
     X = mcar(obs_data, 0.1)  # randomly hold out 10% observed values as ground truth   
     dataset = {"X": X}  # X for model input
 
-    saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1, epochs=100)
+    saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1, epochs=1)
     saits.fit(dataset)
-    imputation = saits.impute(dataset)
-
+    imputation = saits.impute(dataset) # nan impute
     indicating_mask = np.isnan(X.cpu().numpy()) ^ np.isnan(X_ori.cpu().numpy())  # indicating mask for imputation error calculation
     mae = calc_mae(imputation, np.nan_to_num(X_ori.cpu().numpy()), indicating_mask)  # calculate mean absolute error on the ground truth (artificially-missing values)
     print(mae)
-    
     saits.save("saved_imputer/saits_physionet2012_ep100.pypots")  # save the model for future use
-    saits.load("saved_imputer/saits_physionet2012_ep100.pypots")  # reload the serialized model file for following imputation or training
+
+    ## loading
+    # load_saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1)
+    # load_saits.load("saved_imputer/saits_physionet2012_ep100.pypots")  # reload the serialized model file for following imputation or training
+
+    # imputation = load_saits.impute(dataset)
+    # indicating_mask = np.isnan(X.cpu().numpy()) ^ np.isnan(X_ori.cpu().numpy())
+    # mae = calc_mae(imputation, np.nan_to_num(X_ori.cpu().numpy()), indicating_mask)
+    # print(mae)
+    
     sys.exit(0)
 ######################################################################################
 

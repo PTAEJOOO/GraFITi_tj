@@ -139,12 +139,10 @@ class GrATiF(nn.Module):
             device='cuda',
             auxiliary=False,
             wocat=False,
-            imputer=None,
             cond_time=36):
         super().__init__()
         self.auxiliary = auxiliary
         self.wocat = wocat
-        self.imputer = imputer
         self.cond_time = cond_time
         if auxiliary:
             self.dim = input_dim + 1
@@ -186,31 +184,31 @@ class GrATiF(nn.Module):
 
         return x_time, x_vals, x_mask, y_time, y_vals, y_mask
 
-    def impute(self, x_vals, x_mask):
-        # x_vals on only observation range for imputation
-        temp_x_vals = x_vals[:,self.cond_time:,:]
-        temp_x_mask = x_mask[:,self.cond_time:,:]
-        x_vals_ = x_vals[:,:self.cond_time,:]
-        x_mask_ = x_mask[:,:self.cond_time,:]
+    # def impute(self, x_vals, x_mask):
+    #     # x_vals on only observation range for imputation
+    #     temp_x_vals = x_vals[:,self.cond_time:,:]
+    #     temp_x_mask = x_mask[:,self.cond_time:,:]
+    #     x_vals_ = x_vals[:,:self.cond_time,:]
+    #     x_mask_ = x_mask[:,:self.cond_time,:]
 
-        B,T,C = x_vals_.shape
-        x_vals_ = x_vals_.view(B,T*C).transpose(0,1)
-        x_mask_ = x_mask_.view(B,T*C).transpose(0,1)
-        # impute
-        x_vals_ = self.imputer.predict(x_vals_, x_mask_) # to-do: load pretrained imputer and transform the x_vals
-        x_vals_ = torch.from_numpy(x_vals_).transpose(0,1).reshape(B,T,C)
-        x_mask_ = torch.ones_like(x_mask[:,:self.cond_time,:])
-        # concat
-        x_vals_ = torch.concat((x_vals_, temp_x_vals), dim=1)
-        x_mask_ = torch.concat((x_mask_, temp_x_mask), dim=1)
-        return x_vals_, x_mask_
+    #     B,T,C = x_vals_.shape
+    #     x_vals_ = x_vals_.view(B,T*C).transpose(0,1)
+    #     x_mask_ = x_mask_.view(B,T*C).transpose(0,1)
+    #     # impute
+    #     x_vals_ = self.imputer.predict(x_vals_, x_mask_) # to-do: load pretrained imputer and transform the x_vals
+    #     x_vals_ = torch.from_numpy(x_vals_).transpose(0,1).reshape(B,T,C)
+    #     x_mask_ = torch.ones_like(x_mask[:,:self.cond_time,:])
+    #     # concat
+    #     x_vals_ = torch.concat((x_vals_, temp_x_vals), dim=1)
+    #     x_mask_ = torch.concat((x_mask_, temp_x_mask), dim=1)
+    #     return x_vals_, x_mask_
 
     def forward(self, x_time, x_vals, x_mask, y_time, y_vals, y_mask):
         if self.auxiliary:
             x_time, x_vals, x_mask, y_time, y_vals, y_mask = self.add_auxiliary(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
 
-        if self.imputer is not None:
-            x_vals, x_mask = self.impute(x_vals, x_mask)
+        # if self.imputer is not None:
+        #     x_vals, x_mask = self.impute(x_vals, x_mask)
 
         context_x, context_y, target_x, target_y = self.convert_data(x_time, x_vals, x_mask, y_time, y_vals, y_mask)
         # pdb.set_trace()

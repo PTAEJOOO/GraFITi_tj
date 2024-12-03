@@ -101,15 +101,6 @@ elif ARGS.dataset == 'physionet2012':
 
 from gratif.gratif import tsdm_collate
 
-dloader_config_train = {
-    "batch_size": ARGS.batch_size,
-    "shuffle": True,
-    "drop_last": True,
-    "pin_memory": True,
-    "num_workers": 4,
-    "collate_fn": tsdm_collate,
-}
-
 dloader_config_infer = {
     "batch_size": 32,
     "shuffle": False,
@@ -119,11 +110,23 @@ dloader_config_infer = {
     "collate_fn": tsdm_collate,
 }
 
-TRAIN_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_train)
-INFER_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_infer)
-VALID_LOADER = TASK.get_dataloader((ARGS.fold, "valid"), **dloader_config_infer)
 TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_infer)
-EVAL_LOADERS = {"train": INFER_LOADER, "valid": VALID_LOADER, "test": TEST_LOADER}
+
+################################################################################
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# from pypots.imputation import SAITS
+# from pypots.utils.metrics import calc_mae
+# from pygrinder import mcar
+from utils import *
+from torch.utils.data import DataLoader
+
+for batch in tqdm(TEST_LOADER):
+    x_time, x_vals, x_mask, y_time, y_vals, y_mask = (tensor.to(DEVICE) for tensor in batch)
+    new_dataset = CustomDataset(x_time,x_vals,x_mask,y_time,y_vals,y_mask)
+    NEW_TEST_LOADER = DataLoader(new_dataset, batch_size=ARGS.batch_size, shuffle=True)
+
+################################################################################
 
 
 def MSE(y: Tensor, yhat: Tensor, mask: Tensor) -> Tensor:
@@ -173,19 +176,19 @@ MODEL.zero_grad(set_to_none=True)
 
 if ARGS.auxiliary:
     if ARGS.wocat:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5', map_location=torch.device('cpu'))
     else:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
 else:
     if ARGS.wocat:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5', map_location=torch.device('cpu'))
     else:
-        chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
 MODEL.load_state_dict(chp['state_dict'])
 loss_list = []
 count = 0
 with torch.no_grad():
-    for batch in tqdm(TEST_LOADER):
+    for batch in tqdm(NEW_TEST_LOADER):
         # Forward
         Y, YHAT, MASK = predict_fn(MODEL, batch)
         R = LOSS(Y, YHAT, MASK)
@@ -196,7 +199,7 @@ with torch.no_grad():
 test_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
 print("test_loss : ", test_loss.item())
 
-with open("log/eval_2.txt", "a") as file:
+with open("log/eval_grafiti_impute.txt", "a") as file:
     if ARGS.auxiliary:
         if ARGS.wocat:
             content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + ' : ' + str(test_loss.item())
