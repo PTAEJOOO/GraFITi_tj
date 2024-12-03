@@ -115,7 +115,7 @@ TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_test)
 ################################################################################
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# from pypots.imputation import SAITS
+from pypots.imputation import SAITS
 # from pypots.utils.metrics import calc_mae
 # from pygrinder import mcar
 from utils import *
@@ -123,8 +123,22 @@ from torch.utils.data import DataLoader
 
 for batch in tqdm(TEST_LOADER):
     x_time, x_vals, x_mask, y_time, y_vals, y_mask = (tensor.to(DEVICE) for tensor in batch)
-    new_dataset = CustomDataset(x_time,x_vals,x_mask,y_time,y_vals,y_mask)
+    obs_data = x_vals[:,:37,:]
+    dataset = {"X": obs_data}  # X for model input
+
+    load_saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1)
+    load_saits.load("saved_imputer/saits_physionet2012_ep100.pypots")  # reload the serialized model file for following imputation or training
+
+    imputation = load_saits.impute(dataset)
+    print("Impute test dataset successfully!")
+
+    x_mask_ = torch.ones_like(x_mask[:,:37,:]).to(DEVICE)
+    x_mask = torch.cat([x_mask_, x_mask[:,37:,:]],dim=1)
+    new_x = torch.cat([torch.from_numpy(imputation).to(DEVICE), x_vals[:,37:,:]],dim=1)
+
+    new_dataset = CustomDataset(x_time,new_x,x_mask,y_time,y_vals,y_mask)
     NEW_TEST_LOADER = DataLoader(new_dataset, batch_size=ARGS.batch_size, shuffle=True)
+    print("NEW TEST LOADER!")
 
 ################################################################################
 
