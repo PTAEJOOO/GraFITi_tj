@@ -175,7 +175,9 @@ MODEL_CONFIG = {
     "latent_dim": ARGS.latent_dim,
     "n_layers": ARGS.nlayers,
     "device": DEVICE,
-    "auxiliary": ARGS.auxiliary
+    "auxiliary": ARGS.auxiliary,
+    "wocat": ARGS.wocat,
+    "cond_time": ARGS.cond_time
 }
 
 MODEL = GrATiF(**MODEL_CONFIG).to(DEVICE)
@@ -195,7 +197,7 @@ if ARGS.auxiliary:
         chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5', map_location=torch.device('cpu'))
 else:
     if ARGS.wocat:
-        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo.h5', map_location=torch.device('cpu'))
+        chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og.h5', map_location=torch.device('cpu'))
     else:
         chp = torch.load('saved_grafiti_impute/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5', map_location=torch.device('cpu'))
 MODEL.load_state_dict(chp['state_dict'])
@@ -221,7 +223,7 @@ with open("log/eval_grafiti_impute.txt", "a") as file:
             content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + ' : ' + str(test_loss.item())
     else:
         if ARGS.wocat:
-            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo : ' + str(test_loss.item())
+            content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og : ' + str(test_loss.item())
         else:
             content = ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + ' : ' + str(test_loss.item())
     file.write(content + "\n")
