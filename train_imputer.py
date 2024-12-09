@@ -192,16 +192,16 @@ for batch in tqdm(TRAIN_LOADER):
     
     obs_data = x_vals[:,:37,:]
     X_ori = obs_data  # keep X_ori for validation
-    X = mcar(obs_data, 0.1)  # randomly hold out 10% observed values as ground truth   
+    X = mcar(obs_data, 0.3)  # randomly hold out 30% observed values as ground truth   
     dataset = {"X": X}  # X for model input
 
-    saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1, epochs=1)
+    saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1, epochs=200)
     saits.fit(dataset)
     imputation = saits.impute(dataset) # nan impute
     indicating_mask = np.isnan(X.cpu().numpy()) ^ np.isnan(X_ori.cpu().numpy())  # indicating mask for imputation error calculation
     mae = calc_mae(imputation, np.nan_to_num(X_ori.cpu().numpy()), indicating_mask)  # calculate mean absolute error on the ground truth (artificially-missing values)
     print(mae)
-    saits.save("saved_imputer/saits_physionet2012_0.3_ep100.pypots")  # save the model for future use
+    saits.save("saved_imputer/saits_physionet2012_0.3_ep200.pypots")  # save the model for future use
 
     ## loading
     # load_saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1)

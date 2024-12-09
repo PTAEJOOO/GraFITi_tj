@@ -127,7 +127,7 @@ for batch in tqdm(TEST_LOADER):
     dataset = {"X": obs_data}  # X for model input
 
     load_saits = SAITS(n_steps=37, n_features=37, n_layers=2, d_model=256, n_heads=4, d_k=64, d_v=64, d_ffn=128, dropout=0.1)
-    load_saits.load("saved_imputer/saits_physionet2012_ep100.pypots")  # reload the serialized model file for following imputation or training
+    load_saits.load("saved_imputer/saits_physionet2012_0.3_ep100.pypots")  # reload the serialized model file for following imputation or training
 
     imputation = load_saits.impute(dataset)
     print("Impute test dataset successfully!")
