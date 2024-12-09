@@ -10,6 +10,8 @@ from typing import Union, Optional, Callable
 
 import numpy as np
 import torch
+import torch.nn as nn
+
 from torch.utils.data import DataLoader
 
 from .core import _SAITS
@@ -276,6 +278,7 @@ class SAITS(BaseNNImputer):
         file_type: str = "hdf5",
         diagonal_attention_mask: bool = True,
         return_latent_vars: bool = False,
+        mc_sample: bool = False,
     ) -> dict:
         """Make predictions for the input data with the trained model.
 
@@ -308,6 +311,10 @@ class SAITS(BaseNNImputer):
         """
         # Step 1: wrap the input data with classes Dataset and DataLoader
         self.model.eval()  # set the model as eval status to freeze it.
+        if mc_sample:
+            for module in self.model.modules():
+                if isinstance(module, nn.Dropout):
+                    module.train()
         test_set = BaseDataset(
             test_set,
             return_X_ori=False,
@@ -358,6 +365,7 @@ class SAITS(BaseNNImputer):
         self,
         test_set: Union[dict, str],
         file_type: str = "hdf5",
+        mc_sample: bool = False,
     ) -> np.ndarray:
         """Impute missing values in the given data with the trained model.
 
@@ -376,5 +384,5 @@ class SAITS(BaseNNImputer):
             Imputed data.
         """
 
-        result_dict = self.predict(test_set, file_type=file_type)
+        result_dict = self.predict(test_set, file_type=file_type, mc_sample=mc_sample)
         return result_dict["imputation"]
