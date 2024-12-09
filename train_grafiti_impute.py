@@ -205,8 +205,8 @@ for batch in tqdm(TRAIN_LOADER):
     non_zero_std_values = std_prediction[non_zero_std_mask]  # 0이 아닌 값만 선택
     non_zero_std_mean = non_zero_std_values.mean()
 
-    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0) # B x T x C
-    obs_data = torch.nan_to_num(obs_data)
+    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0).to(DEVICE) # B x T x C
+    obs_data = torch.nan_to_num(obs_data).to(DEVICE)
     imputation += obs_data
     new_x = torch.cat([imputation, x_vals[:,37:,:]],dim=1)
 
@@ -241,8 +241,8 @@ for batch in tqdm(VALID_LOADER):
     non_zero_std_values = std_prediction[non_zero_std_mask]  # 0이 아닌 값만 선택
     non_zero_std_mean = non_zero_std_values.mean()
 
-    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0) # B x T x C
-    obs_data = torch.nan_to_num(obs_data)
+    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0).to(DEVICE) # B x T x C
+    obs_data = torch.nan_to_num(obs_data).to(DEVICE)
     imputation += obs_data
     new_x = torch.cat([imputation, x_vals[:,37:,:]],dim=1)
 
@@ -277,8 +277,8 @@ for batch in tqdm(TEST_LOADER):
     non_zero_std_values = std_prediction[non_zero_std_mask]  # 0이 아닌 값만 선택
     non_zero_std_mean = non_zero_std_values.mean()
 
-    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0) # B x T x C
-    obs_data = torch.nan_to_num(obs_data)
+    imputation = torch.where((std_prediction < non_zero_std_mean) & (std_prediction != 0), mean_prediction, 0).to(DEVICE) # B x T x C
+    obs_data = torch.nan_to_num(obs_data).to(DEVICE)
     imputation += obs_data
     new_x = torch.cat([imputation, x_vals[:,37:,:]],dim=1)
 
