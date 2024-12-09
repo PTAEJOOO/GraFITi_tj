@@ -6,11 +6,7 @@ from random import SystemRandom
 from tqdm import tqdm
 
 from imputers import *
-###
-# from sklearn.preprocessing import StandardScaler
-# from pygrinder import mcar
-# from pypots.data import load_specific_dataset
-###
+
 # fmt: off
 parser = argparse.ArgumentParser(description="Training Script for USHCN dataset.")
 parser.add_argument("-q", "--quiet", default=False, const=True, help="kernel-inititialization", nargs="?")
@@ -139,17 +135,12 @@ elif ARGS.dataset == 'physionet2012':
 
     TASK = Physionet2012(normalize_time=True, condition_time=ARGS.cond_time, forecast_horizon=ARGS.forc_time,
                          num_folds=ARGS.nfolds)
-                         
-# elif ARGS.dataset == 'physionet2012_impute':
-#     data = load_specific_dataset('physionet_2012')
-#     X = data['train_X']
 
 from gratif.gratif import tsdm_collate
 from tsdm.tasks.physionet2012 import physionet_collate
 
 dloader_config_train = {
-    # "batch_size": ARGS.batch_size,
-    "batch_size": 8128,
+    "batch_size": 100000,
     "shuffle": True,
     "drop_last": True,
     "pin_memory": True,
@@ -158,7 +149,7 @@ dloader_config_train = {
 }
 
 dloader_config_valid = {
-    "batch_size": 2037,
+    "batch_size": 100000,
     "shuffle": False,
     "drop_last": False,
     "pin_memory": True,
@@ -167,7 +158,7 @@ dloader_config_valid = {
 }
 
 dloader_config_test = {
-    "batch_size": 1798,
+    "batch_size": 100000,
     "shuffle": False,
     "drop_last": False,
     "pin_memory": True,
@@ -176,10 +167,9 @@ dloader_config_test = {
 }
 
 TRAIN_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_train)
-# INFER_LOADER = TASK.get_dataloader((ARGS.fold, "train"), **dloader_config_infer)
 VALID_LOADER = TASK.get_dataloader((ARGS.fold, "valid"), **dloader_config_valid)
 TEST_LOADER = TASK.get_dataloader((ARGS.fold, "test"), **dloader_config_test)
-# EVAL_LOADERS = {"train": INFER_LOADER, "valid": VALID_LOADER, "test": TEST_LOADER}
+
 ######################################################################################
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -211,167 +201,6 @@ for batch in tqdm(TRAIN_LOADER):
     # indicating_mask = np.isnan(X.cpu().numpy()) ^ np.isnan(X_ori.cpu().numpy())
     # mae = calc_mae(imputation, np.nan_to_num(X_ori.cpu().numpy()), indicating_mask)
     # print(mae)
-    
+
 sys.exit(0)
 ######################################################################################
-
-# def MSE(y: Tensor, yhat: Tensor, mask: Tensor) -> Tensor:
-#     err = torch.mean((y[mask] - yhat[mask]) ** 2)
-#     return err
-
-
-# def MAE(y: Tensor, yhat: Tensor, mask: Tensor) -> Tensor:
-#     err = torch.sum(mask * torch.abs(y - yhat), 1) / (torch.sum(mask, 1))
-#     return torch.mean(err)
-
-
-# def RMSE(y: Tensor, yhat: Tensor, mask: Tensor) -> Tensor:
-#     err = torch.sqrt(torch.sum(mask * (y - yhat) ** 2, 1) / (torch.sum(mask, 1)))
-#     return torch.mean(err)
-
-
-# METRICS = {
-#     "RMSE": jit.script(RMSE),
-#     "MSE": jit.script(MSE),
-#     "MAE": jit.script(MAE),
-# }
-# LOSS = jit.script(MSE)
-
-# DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# from gratif.gratif import GrATiF
-
-# MODEL_CONFIG = {
-#     "input_dim": TASK.dataset.shape[-1],
-#     "attn_head": ARGS.attn_head,
-#     "latent_dim": ARGS.latent_dim,
-#     "n_layers": ARGS.nlayers,
-#     "device": DEVICE,
-#     "auxiliary": ARGS.auxiliary,
-#     "wocat": ARGS.wocat,
-#     "imputer": imputer,
-#     "cond_time": ARGS.cond_time
-# }
-
-# MODEL = GrATiF(**MODEL_CONFIG).to(DEVICE)
-# torchinfo.summary(MODEL)
-
-
-# def predict_fn(model, batch) -> tuple[Tensor, Tensor, Tensor]:
-#     """Get targets and predictions."""
-#     T, X, M, TY, Y, MY = (tensor.to(DEVICE) for tensor in batch)
-#     output, target_U_, target_mask_ = model(T, X, M, TY, Y, MY)
-#     return target_U_, output.squeeze(), target_mask_
-
-# MODEL.zero_grad(set_to_none=True)
-
-# from torch.optim import AdamW
-
-# OPTIMIZER = AdamW(MODEL.parameters(), **OPTIMIZER_CONFIG)
-# scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(OPTIMIZER, 'min', patience=10, factor=0.5, min_lr=0.00001,
-#                                                        verbose=True)
-
-# es = False
-# best_val_loss = 10e8
-# total_num_batches = 0
-# for epoch in range(1, ARGS.epochs + 1):
-#     loss_list = []
-#     start_time = time.time()
-#     for batch in tqdm(TRAIN_LOADER):
-#         total_num_batches += 1
-#         OPTIMIZER.zero_grad()
-#         Y, YHAT, MASK = predict_fn(MODEL, batch)
-#         R = LOSS(Y, YHAT, MASK)
-#         assert torch.isfinite(R).item(), "Model Collapsed!"
-#         loss_list.append([R])
-#         # Backward
-#         R.backward()
-#         OPTIMIZER.step()
-#         exit()
-#     # exit()    
-#     epoch_time = time.time()
-#     train_loss = torch.mean(torch.Tensor(loss_list))
-#     loss_list = []
-#     count = 0
-#     with torch.no_grad():
-#         for batch in tqdm(VALID_LOADER):
-#             total_num_batches += 1
-#             # Forward
-#             Y, YHAT, MASK = predict_fn(MODEL, batch)
-#             R = LOSS(Y, YHAT, MASK)
-#             if R.isnan():
-#                 pdb.set_trace()
-#             loss_list.append([R * MASK.sum()])
-#             count += MASK.sum()
-#     val_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
-#     print(epoch, "Train: ", train_loss.item(), " VAL: ", val_loss.item(), " epoch time: ", int(epoch_time - start_time),
-#           'secs')
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-
-#         if ARGS.auxiliary:
-#             if ARGS.wocat:
-#                 torch.save({'args': ARGS,
-#                             'epoch': epoch,
-#                             'state_dict': MODEL.state_dict(),
-#                             'optimizer_state_dict': OPTIMIZER.state_dict(),
-#                             'loss': train_loss,
-#                             }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5')
-#             else:
-#                 torch.save({'args': ARGS,
-#                             'epoch': epoch,
-#                             'state_dict': MODEL.state_dict(),
-#                             'optimizer_state_dict': OPTIMIZER.state_dict(),
-#                             'loss': train_loss,
-#                             }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
-#         else:
-#             if ARGS.wocat:
-#                 torch.save({'args': ARGS,
-#                             'epoch': epoch,
-#                             'state_dict': MODEL.state_dict(),
-#                             'optimizer_state_dict': OPTIMIZER.state_dict(),
-#                             'loss': train_loss,
-#                             }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og.h5')
-#             else:
-#                 torch.save({'args': ARGS,
-#                             'epoch': epoch,
-#                             'state_dict': MODEL.state_dict(),
-#                             'optimizer_state_dict': OPTIMIZER.state_dict(),
-#                             'loss': train_loss,
-#                             }, 'saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
-#         early_stop = 0
-#     else:
-#         early_stop += 1
-#     if early_stop == 30:
-#         print("Early stopping because of no improvement in val. metric for 30 epochs")
-#         es = True
-#     scheduler.step(val_loss)
-
-#     # LOGGER.log_epoch_end(epoch)
-#     if (epoch == ARGS.epochs) or (es == True):
-#         if ARGS.auxiliary:
-#             if ARGS.wocat:
-#                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_ax' + '.h5')
-#             else:
-#                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_ax' + '.h5')
-#         else:
-#             if ARGS.wocat:
-#                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '_wo_og.h5')
-#             else:
-#                 chp = torch.load('saved_models/' + ARGS.dataset + '_' + str(ARGS.nlayers) + '_' + str(ARGS.attn_head) + '_' + str(ARGS.latent_dim) + '.h5')
-#         MODEL.load_state_dict(chp['state_dict'])
-#         loss_list = []
-#         count = 0
-#         with torch.no_grad():
-#             for batch in tqdm(TEST_LOADER):
-#                 total_num_batches += 1
-#                 # Forward
-#                 Y, YHAT, MASK = predict_fn(MODEL, batch)
-#                 R = LOSS(Y, YHAT, MASK)
-#                 assert torch.isfinite(R).item(), "Model Collapsed!"
-#                 # loss_list.append([R*Y.shape[0]])
-#                 loss_list.append([R * MASK.sum()])
-#                 count += MASK.sum()
-#         test_loss = torch.sum(torch.Tensor(loss_list).to(DEVICE) / count)
-#         print("Best_val_loss: ", best_val_loss.item(), " test_loss : ", test_loss.item())
-#         break
