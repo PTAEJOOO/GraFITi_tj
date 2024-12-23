@@ -1,8 +1,8 @@
 ### train_grafiti_impute.py ###
 
-nlayers="2"
-attn_head="2 4"
-latent_dim="64 128"
+nlayers="1"
+attn_head="1"
+latent_dim="64"
 
 for nlayer in $nlayers; do
     for at in $attn_head; do
